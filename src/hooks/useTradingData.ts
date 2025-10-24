@@ -10,6 +10,7 @@ const timeframeToLimit: Record<Timeframe, number> = {
   '1h': 500,
   '4h': 400,
   '1d': 365,
+  '1w': 200,
 };
 
 const timeframeToInterval: Record<Timeframe, string> = {
@@ -19,6 +20,7 @@ const timeframeToInterval: Record<Timeframe, string> = {
   '1h': '1h',
   '4h': '4h',
   '1d': '1d',
+  '1w': '1w',
 };
 
 export function useTradingData(
