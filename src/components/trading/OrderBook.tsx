@@ -112,47 +112,69 @@ export function OrderBook({ exchange, symbol, lastPrice }: OrderBookProps) {
     asks.length && bids.length ? (asks[asks.length - 1].price + bids[0].price) / 2 : lastPrice;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-foreground">Order Book</h4>
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-primary animate-breathe" />
+          <h4 className="text-sm font-bold text-foreground uppercase tracking-wide">Order Book</h4>
+        </div>
         <div className="flex items-center gap-2">
           <Select value={mode} onValueChange={(v) => setMode(v as 'depth' | 'sim')}>
-            <SelectTrigger className="h-8 w-[120px] text-xs">
+            <SelectTrigger className="h-8 w-[110px] text-xs border-primary/20 bg-primary/5 hover:bg-primary/10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="depth">Real Data</SelectItem>
-              <SelectItem value="sim">Simulation</SelectItem>
+              <SelectItem value="depth">🔴 Live</SelectItem>
+              <SelectItem value="sim">📊 Sim</SelectItem>
             </SelectContent>
           </Select>
-          <div className="text-xs text-muted-foreground">
-            Mid: <span className="font-mono font-bold text-primary">{midPrice?.toFixed(2)}</span>
-          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        {/* Asks */}
-        <div className="rounded-lg border border-border bg-card/30 p-2">
-          <div className="mb-2 flex justify-between text-xs font-semibold text-muted-foreground">
-            <span>Price</span>
-            <span>Volume</span>
+      {/* Mid Price Display */}
+      <div className="metric-card rounded-xl p-3 text-center">
+        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          Mid Price
+        </div>
+        <div className="font-mono text-lg font-black text-primary glow-text">
+          ${midPrice?.toFixed(2)}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {/* Asks Panel */}
+        <div className="data-panel rounded-xl border-destructive/20 p-3">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse" />
+              <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">Asks</span>
+            </div>
+            <span className="text-[9px] font-mono text-muted-foreground">{asks.length} lvl</span>
           </div>
-          <ScrollArea className="h-[220px]">
+          <div className="mb-2 flex justify-between text-[10px] font-semibold text-muted-foreground uppercase">
+            <span>Price</span>
+            <span>Size</span>
+          </div>
+          <ScrollArea className="h-[240px]">
             <div className="flex flex-col-reverse space-y-0.5">
               {asks.map((ask, idx) => {
                 const percentage = (ask.volume / maxVolume) * 100;
+                const isLarge = percentage > 70;
                 return (
                   <div
                     key={idx}
-                    className="relative flex justify-between font-mono text-xs text-destructive"
+                    className={`relative flex justify-between font-mono text-xs transition-all hover:bg-destructive/5 ${
+                      isLarge ? 'text-destructive font-bold' : 'text-destructive/90'
+                    }`}
                   >
                     <div
-                      className="absolute right-0 top-0 h-full bg-destructive/10"
+                      className={`absolute right-0 top-0 h-full transition-all ${
+                        isLarge ? 'bg-destructive/20' : 'bg-destructive/10'
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                     <span className="relative z-10 font-bold">{ask.price.toFixed(2)}</span>
-                    <span className="relative z-10">{ask.volume.toFixed(3)}</span>
+                    <span className="relative z-10 text-[11px]">{ask.volume.toFixed(3)}</span>
                   </div>
                 );
               })}
@@ -160,32 +182,56 @@ export function OrderBook({ exchange, symbol, lastPrice }: OrderBookProps) {
           </ScrollArea>
         </div>
 
-        {/* Bids */}
-        <div className="rounded-lg border border-border bg-card/30 p-2">
-          <div className="mb-2 flex justify-between text-xs font-semibold text-muted-foreground">
-            <span>Price</span>
-            <span>Volume</span>
+        {/* Bids Panel */}
+        <div className="data-panel rounded-xl border-success/20 p-3">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              <span className="text-[10px] font-bold text-success uppercase tracking-wider">Bids</span>
+            </div>
+            <span className="text-[9px] font-mono text-muted-foreground">{bids.length} lvl</span>
           </div>
-          <ScrollArea className="h-[220px]">
+          <div className="mb-2 flex justify-between text-[10px] font-semibold text-muted-foreground uppercase">
+            <span>Price</span>
+            <span>Size</span>
+          </div>
+          <ScrollArea className="h-[240px]">
             <div className="space-y-0.5">
               {bids.map((bid, idx) => {
                 const percentage = (bid.volume / maxVolume) * 100;
+                const isLarge = percentage > 70;
                 return (
                   <div
                     key={idx}
-                    className="relative flex justify-between font-mono text-xs text-success"
+                    className={`relative flex justify-between font-mono text-xs transition-all hover:bg-success/5 ${
+                      isLarge ? 'text-success font-bold' : 'text-success/90'
+                    }`}
                   >
                     <div
-                      className="absolute left-0 top-0 h-full bg-success/10"
+                      className={`absolute left-0 top-0 h-full transition-all ${
+                        isLarge ? 'bg-success/20' : 'bg-success/10'
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                     <span className="relative z-10 font-bold">{bid.price.toFixed(2)}</span>
-                    <span className="relative z-10">{bid.volume.toFixed(3)}</span>
+                    <span className="relative z-10 text-[11px]">{bid.volume.toFixed(3)}</span>
                   </div>
                 );
               })}
             </div>
           </ScrollArea>
+        </div>
+      </div>
+
+      {/* Spread Info */}
+      <div className="metric-card rounded-xl p-2.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground font-medium">Spread</span>
+          <span className="font-mono font-bold text-foreground">
+            {asks.length && bids.length 
+              ? `$${(asks[asks.length - 1].price - bids[0].price).toFixed(2)}`
+              : '—'}
+          </span>
         </div>
       </div>
     </div>

@@ -339,44 +339,75 @@ export function Chart({
 
   return (
     <div className="space-y-4">
-      <div className="glass-panel rounded-xl p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-mono text-sm font-bold text-foreground">
-            {symbol.toUpperCase()} / USDT
-          </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="h-8 w-8 p-0"
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+      <div className="glass-panel-neon hover-lift rounded-2xl p-5 relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
         
-        <ReactApexChart
-          options={candlestickOptions}
-          series={candlestickSeries}
-          type="candlestick"
-          height={isFullscreen ? 600 : 360}
-        />
+        <div className="relative z-10">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/30">
+                <div className="h-4 w-4 rounded bg-gradient-to-br from-primary to-primary/60" />
+              </div>
+              <h3 className="font-mono text-base font-black text-foreground tracking-tight">
+                {symbol.toUpperCase()} <span className="text-muted-foreground">/</span> USDT
+              </h3>
+              <div className="status-dot bg-success" />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
+          <div className="rounded-xl overflow-hidden border border-border/50 bg-background/20">
+            <ReactApexChart
+              options={candlestickOptions}
+              series={candlestickSeries}
+              type="candlestick"
+              height={isFullscreen ? 600 : 400}
+            />
+          </div>
+        </div>
       </div>
 
       {showRSI && (
-        <div className="glass-panel animate-fade-in rounded-xl p-4">
-          <div className="mb-2 text-xs font-semibold text-muted-foreground">RSI ({rsiPeriod})</div>
-          <ReactApexChart options={rsiOptions} series={rsiSeries} type="line" height={120} />
+        <div className="glass-panel-strong animate-fade-in-up hover-lift rounded-2xl p-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-chart-2 to-transparent opacity-30" />
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-1 w-1 rounded-full bg-chart-2 animate-breathe" />
+            <div className="text-xs font-bold text-foreground uppercase tracking-wider">
+              RSI Oscillator <span className="text-muted-foreground">({rsiPeriod})</span>
+            </div>
+          </div>
+          <div className="rounded-lg overflow-hidden border border-border/30 bg-background/10">
+            <ReactApexChart options={rsiOptions} series={rsiSeries} type="line" height={130} />
+          </div>
         </div>
       )}
 
       {showMACD && (
-        <div className="glass-panel animate-fade-in rounded-xl p-4">
-          <div className="mb-2 text-xs font-semibold text-muted-foreground">MACD</div>
-          <ReactApexChart options={macdOptions} series={macdSeries} type="line" height={140} />
+        <div className="glass-panel-strong animate-fade-in-up hover-lift rounded-2xl p-4 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-chart-1 to-transparent opacity-30" />
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-1 w-1 rounded-full bg-chart-1 animate-breathe" />
+            <div className="text-xs font-bold text-foreground uppercase tracking-wider">
+              MACD Indicator
+            </div>
+          </div>
+          <div className="rounded-lg overflow-hidden border border-border/30 bg-background/10">
+            <ReactApexChart options={macdOptions} series={macdSeries} type="line" height={150} />
+          </div>
         </div>
       )}
     </div>
