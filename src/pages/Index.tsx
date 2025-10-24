@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/trading/Header';
@@ -22,7 +24,9 @@ import { DepthChart } from '@/components/trading/DepthChart';
 import { QuickStats } from '@/components/trading/QuickStats';
 import { TimeframeSelector } from '@/components/trading/TimeframeSelector';
 import { CandlestickPatterns } from '@/components/trading/CandlestickPatterns';
-import { Heatmap } from '@/components/trading/Heatmap';
+import { RealHeatmap } from '@/components/trading/RealHeatmap';
+import { BuyOmni99 } from '@/components/tokens/BuyOmni99';
+import { AdminPanel } from '@/components/admin/AdminPanel';
 import { PriceAlerts } from '@/components/trading/PriceAlerts';
 import { RiskCalculator } from '@/components/trading/RiskCalculator';
 import { EconomicCalendar } from '@/components/trading/EconomicCalendar';
@@ -46,13 +50,29 @@ import { toast } from 'sonner';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
+        return;
       }
-    });
+
+      // Check if user is admin
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!roleData);
+    };
+
+    checkAuth();
   }, [navigate]);
 
   const [exchange, setExchange] = useState<Exchange>(
@@ -156,20 +176,47 @@ const Index = () => {
     toast.success('Indicators applied');
   };
 
+  if (showAdminPanel && isAdmin) {
+    return (
+      <div className="relative min-h-screen p-4 animate-fade-in">
+        <ParticleBackground />
+        <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
+          <div className="glass-panel rounded-2xl p-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-foreground">OMNI Trading Terminal - Admin</h1>
+            <Button onClick={() => setShowAdminPanel(false)} variant="outline">
+              Back to Trading
+            </Button>
+          </div>
+          <div className="glass-panel rounded-2xl p-6">
+            <AdminPanel />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen p-4 animate-fade-in">
       <ParticleBackground />
       <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
-        <Header
-          exchange={exchange}
-          symbol={symbol}
-          source={source}
-          symbols={symbols}
-          onExchangeChange={handleExchangeChange}
-          onSymbolChange={handleSymbolChange}
-          onSourceChange={handleSourceChange}
-          onRefresh={handleRefresh}
-        />
+        <div className="glass-panel rounded-2xl p-4 flex items-center justify-between neon-border">
+          <Header
+            exchange={exchange}
+            symbol={symbol}
+            source={source}
+            symbols={symbols}
+            onExchangeChange={handleExchangeChange}
+            onSymbolChange={handleSymbolChange}
+            onSourceChange={handleSourceChange}
+            onRefresh={handleRefresh}
+          />
+          {isAdmin && (
+            <Button onClick={() => setShowAdminPanel(true)} variant="outline" size="sm">
+              <Shield className="w-4 h-4 mr-2" />
+              Admin Panel
+            </Button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_1fr_380px]">
           {/* Left Sidebar */}
@@ -212,8 +259,8 @@ const Index = () => {
           </aside>
 
           {/* Main Chart Area */}
-          <main className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl animate-scale-in">
-            <Heatmap />
+          <main className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl animate-scale-in gradient-glow">
+            <RealHeatmap />
             
             <PriceDisplay
               symbol={symbol}
@@ -253,6 +300,7 @@ const Index = () => {
 
           {/* Right Sidebar */}
           <aside className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl transition-all duration-300 hover:shadow-primary/10 animate-slide-in-right">
+            <BuyOmni99 />
             <WalletButton />
             <OrderPanel />
             <AdvancedOrderTypes />

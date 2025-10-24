@@ -178,6 +178,14 @@ All colors MUST be HSL.
     animation: flash 0.3s ease-in-out;
   }
 
+  .neon-border {
+    box-shadow: var(--neon-border);
+  }
+
+  .gradient-glow {
+    box-shadow: var(--gradient-glow);
+  }
+
   /* Enhanced hover effects */
   .hover-lift {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

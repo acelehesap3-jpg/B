@@ -18,8 +18,8 @@ export const CandlestickPatterns = ({ patterns }: CandlestickPatternsProps) => {
     );
   }
 
-  const getIcon = (type: string) => type === 'bullish' ? TrendingUp : type === 'bearish' ? TrendingDown : Minus;
-  const getColor = (type: string) => type === 'bullish' ? 'text-success bg-success/10 border-success/20' : type === 'bearish' ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-muted-foreground bg-muted/20 border-muted/20';
+  const getIcon = (signal: string) => signal === 'bullish' ? TrendingUp : signal === 'bearish' ? TrendingDown : Minus;
+  const getColor = (signal: string) => signal === 'bullish' ? 'text-success bg-success/10 border-success/20' : signal === 'bearish' ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-muted-foreground bg-muted/20 border-muted/20';
 
   return (
     <div className="space-y-3">
@@ -29,9 +29,9 @@ export const CandlestickPatterns = ({ patterns }: CandlestickPatternsProps) => {
       </div>
       <div className="space-y-2">
         {patterns.slice(0, 5).map((pattern, i) => {
-          const Icon = getIcon(pattern.type);
+          const Icon = getIcon(pattern.signal);
           return (
-            <div key={i} className={`p-3 rounded-lg border ${getColor(pattern.type)} transition-all hover:scale-105`}>
+            <div key={i} className={`p-3 rounded-lg border ${getColor(pattern.signal)} transition-all hover:scale-105`}>
               <div className="flex items-center gap-3">
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 <div className="flex-1">
@@ -39,7 +39,7 @@ export const CandlestickPatterns = ({ patterns }: CandlestickPatternsProps) => {
                     <span className="text-sm font-medium">{pattern.name}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-background/50 uppercase">{(pattern.strength * 100).toFixed(0)}%</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 capitalize">{pattern.type} signal</div>
+                  <div className="text-xs text-muted-foreground mt-1 capitalize">{pattern.signal} signal</div>
                 </div>
               </div>
             </div>
