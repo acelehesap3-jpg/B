@@ -67,9 +67,15 @@ const Index = () => {
         .select('role')
         .eq('user_id', session.user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
 
       setIsAdmin(!!roleData);
+      
+      if (roleData) {
+        toast.success('Admin Panel Erişimi Aktif', {
+          description: 'Yönetici özellikleri kullanıma hazır'
+        });
+      }
     };
 
     checkAuth();
