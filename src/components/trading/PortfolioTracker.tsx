@@ -108,18 +108,6 @@ export const PortfolioTracker = () => {
     return (pnl / cost) * 100;
   };
 
-  const totalPnL = positions.reduce((sum, pos) => sum + calculatePnL(pos), 0);
-  const totalValue = positions.reduce((sum, pos) => sum + (pos.current * pos.quantity), 0);
-
-  const winRate = positions.filter(p => calculatePnL(p) > 0).length / positions.length * 100;
-  const avgPnL = totalPnL / positions.length;
-  const bestPerformer = positions.reduce((best, pos) => 
-    calculatePnLPercent(pos) > calculatePnLPercent(best) ? pos : best
-  );
-  const worstPerformer = positions.reduce((worst, pos) => 
-    calculatePnLPercent(pos) < calculatePnLPercent(worst) ? pos : worst
-  );
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -139,6 +127,18 @@ export const PortfolioTracker = () => {
       </div>
     );
   }
+
+  // Calculate metrics only when positions exist
+  const totalPnL = positions.reduce((sum, pos) => sum + calculatePnL(pos), 0);
+  const totalValue = positions.reduce((sum, pos) => sum + (pos.current * pos.quantity), 0);
+  const winRate = positions.filter(p => calculatePnL(p) > 0).length / positions.length * 100;
+  const avgPnL = totalPnL / positions.length;
+  const bestPerformer = positions.reduce((best, pos) => 
+    calculatePnLPercent(pos) > calculatePnLPercent(best) ? pos : best
+  );
+  const worstPerformer = positions.reduce((worst, pos) => 
+    calculatePnLPercent(pos) < calculatePnLPercent(worst) ? pos : worst
+  );
 
   return (
     <Tabs defaultValue="overview" className="space-y-4">
