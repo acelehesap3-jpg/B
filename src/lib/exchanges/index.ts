@@ -3,6 +3,9 @@ import { okx } from './okx';
 import { kucoin } from './kucoin';
 import { coinbase } from './coinbase';
 import { nasdaq } from './nasdaq';
+import { nyse } from './nyse';
+import { forex } from './forex';
+import { cme } from './cme';
 import { Exchange } from '@/types/trading';
 
 export const exchanges = {
@@ -11,6 +14,9 @@ export const exchanges = {
   KUCOIN: kucoin,
   COINBASE: coinbase,
   NASDAQ: nasdaq,
+  NYSE: nyse,
+  FOREX: forex,
+  CME: cme,
 } as const;
 
 export function getExchange(exchange: Exchange) {
@@ -38,3 +44,6 @@ export * from './okx';
 export * from './kucoin';
 export * from './coinbase';
 export * from './nasdaq';
+export * from './nyse';
+export * from './forex';
+export * from './cme';

@@ -4,6 +4,9 @@ import { useOKXData } from './useOKXData';
 import { useKuCoinData } from './useKuCoinData';
 import { useCoinbaseData } from './useCoinbaseData';
 import { useNASDAQData } from './useNASDAQData';
+import { useNYSEData } from './useNYSEData';
+import { useForexData } from './useForexData';
+import { useCMEData } from './useCMEData';
 
 export interface ExchangeDataResult {
   candles: Candle[];
@@ -41,7 +44,22 @@ export function useExchangeData(
   );
   
   const nasdaqData = useNASDAQData(
-    exchange === 'NASDAQ' || exchange === 'NYSE' ? symbol : '',
+    exchange === 'NASDAQ' ? symbol : '',
+    timeframe
+  );
+  
+  const nyseData = useNYSEData(
+    exchange === 'NYSE' ? symbol : '',
+    timeframe
+  );
+  
+  const forexData = useForexData(
+    exchange === 'FOREX' ? symbol : '',
+    timeframe
+  );
+  
+  const cmeData = useCMEData(
+    exchange === 'CME' ? symbol : '',
     timeframe
   );
 
@@ -55,8 +73,13 @@ export function useExchangeData(
     case 'COINBASE':
       return coinbaseData;
     case 'NASDAQ':
-    case 'NYSE':
       return nasdaqData;
+    case 'NYSE':
+      return nyseData;
+    case 'FOREX':
+      return forexData;
+    case 'CME':
+      return cmeData;
     default:
       return {
         candles: [],
@@ -74,3 +97,6 @@ export * from './useOKXData';
 export * from './useKuCoinData';
 export * from './useCoinbaseData';
 export * from './useNASDAQData';
+export * from './useNYSEData';
+export * from './useForexData';
+export * from './useCMEData';
