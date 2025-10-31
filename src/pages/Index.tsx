@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Navbar } from '@/components/navigation/Navbar';
 import { Header } from '@/components/trading/Header';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
 import { CryptoPayment } from '@/components/web3/CryptoPayment';
@@ -13,7 +12,7 @@ import { PriceDisplay } from '@/components/trading/PriceDisplay';
 import { TradeFeed } from '@/components/trading/TradeFeed';
 import { IndicatorControls } from '@/components/trading/IndicatorControls';
 import { Terminal } from '@/components/trading/Terminal';
-import { Chart } from '@/components/trading/Chart';
+import { OptimizedChart } from '@/components/trading/OptimizedChart';
 import { OrderBook } from '@/components/trading/OrderBook';
 import { NewsFeed } from '@/components/trading/NewsFeed';
 import { MarketSummary } from '@/components/trading/MarketSummary';
@@ -186,45 +185,38 @@ const Index = () => {
 
   if (showAdminPanel && isAdmin) {
     return (
-      <div className="relative min-h-screen p-4 animate-fade-in">
-        <ParticleBackground />
-        <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
-          <div className="glass-panel rounded-2xl p-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground">OMNI Trading Terminal - Admin</h1>
-            <Button onClick={() => setShowAdminPanel(false)} variant="outline">
-              Back to Trading
-            </Button>
-          </div>
-          <div className="glass-panel rounded-2xl p-6">
-            <AdminPanel />
+      <>
+        <Navbar onAdminClick={() => setShowAdminPanel(false)} isAdmin={isAdmin} />
+        <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
+          <ParticleBackground />
+          <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
+            <div className="glass-panel-strong rounded-2xl p-6 animate-scale-in">
+              <AdminPanel />
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="relative min-h-screen p-4 animate-fade-in">
-      <ParticleBackground />
-      <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
-        <div className="glass-panel rounded-2xl p-4 flex items-center justify-between neon-border">
-          <Header
-            exchange={exchange}
-            symbol={symbol}
-            source={source}
-            symbols={symbols}
-            onExchangeChange={handleExchangeChange}
-            onSymbolChange={handleSymbolChange}
-            onSourceChange={handleSourceChange}
-            onRefresh={handleRefresh}
-          />
-          {isAdmin && (
-            <Button onClick={() => setShowAdminPanel(true)} variant="outline" size="sm">
-              <Shield className="w-4 h-4 mr-2" />
-              Admin Panel
-            </Button>
-          )}
-        </div>
+    <>
+      <Navbar onAdminClick={() => setShowAdminPanel(true)} isAdmin={isAdmin} />
+      <div className="relative min-h-screen pt-24 p-4 animate-fade-in">
+        <ParticleBackground />
+        <div className="relative z-10 mx-auto max-w-[1800px] space-y-4">
+          <div className="glass-panel-strong rounded-2xl p-4 neon-border-strong animate-slide-fade-down">
+            <Header
+              exchange={exchange}
+              symbol={symbol}
+              source={source}
+              symbols={symbols}
+              onExchangeChange={handleExchangeChange}
+              onSymbolChange={handleSymbolChange}
+              onSourceChange={handleSourceChange}
+              onRefresh={handleRefresh}
+            />
+          </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[380px_1fr_380px]">
           {/* Left Sidebar */}
@@ -277,7 +269,7 @@ const Index = () => {
               source={source.toUpperCase()}
             />
 
-            <Chart
+            <OptimizedChart
               candles={candles}
               showSMA={indicatorSettings.showSMA}
               showEMA={indicatorSettings.showEMA}
@@ -343,6 +335,7 @@ const Index = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
