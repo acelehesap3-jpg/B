@@ -3,6 +3,8 @@ import { BuyOmni99 } from '@/components/tokens/BuyOmni99';
 import { WalletButton } from '@/components/web3/WalletButton';
 import { MarketSelector } from '@/components/trading/MarketSelector';
 import { OrderPanel } from '@/components/trading/OrderPanel';
+import { RealOrderPanel } from '@/components/trading/RealOrderPanel';
+import { TradingModeSettings } from '@/components/trading/TradingModeSettings';
 import { AdvancedOrderTypes } from '@/components/trading/AdvancedOrderTypes';
 import { PriceAlerts } from '@/components/trading/PriceAlerts';
 import { RiskCalculator } from '@/components/trading/RiskCalculator';
@@ -14,6 +16,8 @@ import { MarketSummary } from '@/components/trading/MarketSummary';
 import { NewsFeed } from '@/components/trading/NewsFeed';
 import { Exchange, AssetType } from '@/types/trading';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTradingStore } from '@/lib/stores';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Lazy load heavy components
 const PortfolioTracker = lazy(() => import('@/components/trading/PortfolioTracker').then(m => ({ default: m.PortfolioTracker })));
@@ -39,24 +43,61 @@ export const RightSidebar = memo(({
   assetType,
   onSelectSymbol,
 }: RightSidebarProps) => {
+  const { mode } = useTradingStore();
+
   return (
     <aside className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl transition-all duration-300 hover:shadow-primary/10 animate-slide-in-right">
       <BuyOmni99 />
       <WalletButton />
-      <MarketSelector 
-        onSelectSymbol={onSelectSymbol} 
-        selectedSymbol={symbol}
-      />
-      <OrderPanel 
-        symbol={symbol} 
-        currentPrice={currentPrice} 
-        assetType={assetType}
-        exchange={exchange}
-      />
-      <AdvancedOrderTypes />
-      <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
-        <PortfolioTracker />
-      </Suspense>
+      
+      <Tabs defaultValue="trading" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="trading">Trading</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="trading" className="space-y-4 mt-4">
+          <MarketSelector 
+            onSelectSymbol={onSelectSymbol} 
+            selectedSymbol={symbol}
+          />
+          
+          {mode === 'real' ? (
+            <RealOrderPanel 
+              symbol={symbol} 
+              currentPrice={currentPrice || 0}
+              exchange={exchange}
+            />
+          ) : (
+            <OrderPanel 
+              symbol={symbol} 
+              currentPrice={currentPrice} 
+              assetType={assetType}
+              exchange={exchange}
+            />
+          )}
+          
+          <AdvancedOrderTypes />
+          
+          <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
+            <PortfolioTracker />
+          </Suspense>
+          
+          <PriceAlerts />
+          <RiskCalculator />
+          <LiquidityZones />
+          <HotkeyPanel />
+          
+          <SwapInterface />
+          <CryptoPayment />
+          <MarketSummary exchange={exchange} symbol={symbol} />
+        </TabsContent>
+        
+        <TabsContent value="settings" className="space-y-4 mt-4">
+          <TradingModeSettings />
+        </TabsContent>
+      </Tabs>
+      
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
         <AutoTradingSignals />
       </Suspense>
@@ -69,19 +110,12 @@ export const RightSidebar = memo(({
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
         <MarketSentiment />
       </Suspense>
-      <PriceAlerts />
-      <RiskCalculator />
-      <LiquidityZones />
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
         <EconomicCalendar />
       </Suspense>
-      <HotkeyPanel />
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
         <TradeJournal />
       </Suspense>
-      <SwapInterface />
-      <CryptoPayment />
-      <MarketSummary exchange={exchange} symbol={symbol} />
       <NewsFeed />
     </aside>
   );
