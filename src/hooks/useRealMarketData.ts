@@ -9,6 +9,8 @@ interface MarketData {
   high24h: number;
   low24h: number;
   lastUpdate: number;
+  marketType: 'crypto' | 'forex' | 'stocks' | 'indices';
+  exchange?: string;
 }
 
 interface WebSocketMessage {
@@ -23,7 +25,11 @@ interface WebSocketMessage {
   };
 }
 
-export const useRealMarketData = (symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT']) => {
+export const useRealMarketData = (
+  symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT'],
+  marketType: 'crypto' | 'forex' | 'stocks' | 'indices' = 'crypto',
+  exchange?: string
+) => {
   const [marketData, setMarketData] = useState<Record<string, MarketData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +47,26 @@ export const useRealMarketData = (symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SO
         wsRef.current.close();
       }
 
-      // Create streams for all symbols
-      const streams = symbols.map(symbol => `${symbol.toLowerCase()}@ticker`).join('/');
-      const wsUrl = `wss://stream.binance.com:9443/ws/${streams}`;
+      // Get WebSocket URL based on market type
+      const getWsUrl = () => {
+        switch (marketType) {
+          case 'crypto':
+            const streams = symbols.map(symbol => `${symbol.toLowerCase()}@ticker`).join('/');
+            return `wss://stream.binance.com:9443/ws/${streams}`;
+          case 'forex':
+            return `wss://stream.oanda.com/v3/instruments/${symbols.join(',')}/price`;
+          case 'stocks':
+          case 'indices':
+            return `wss://ws.finnhub.io?token=${import.meta.env.VITE_FINNHUB_API_KEY}`;
+          default:
+            return null;
+        }
+      };
+
+      const wsUrl = getWsUrl();
+      if (!wsUrl) {
+        throw new Error(`WebSocket not supported for market type: ${marketType}`);
+      }
       
       wsRef.current = new WebSocket(wsUrl);
 
@@ -55,29 +78,89 @@ export const useRealMarketData = (symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SO
 
       wsRef.current.onmessage = (event) => {
         try {
-          const message: WebSocketMessage = JSON.parse(event.data);
+          const data = JSON.parse(event.data);
           
-          if (message.data && message.data.s) {
-            const symbol = message.data.s;
-            const price = parseFloat(message.data.c);
-            const changePercent = parseFloat(message.data.P);
-            const volume = message.data.v;
-            const high24h = parseFloat(message.data.h);
-            const low24h = parseFloat(message.data.l);
+          switch (marketType) {
+            case 'crypto':
+              if (data.data && data.data.s) {
+                const symbol = data.data.s;
+                const price = parseFloat(data.data.c);
+                const changePercent = parseFloat(data.data.P);
+                const volume = data.data.v;
+                const high24h = parseFloat(data.data.h);
+                const low24h = parseFloat(data.data.l);
 
-            setMarketData(prev => ({
-              ...prev,
-              [symbol]: {
-                symbol: formatSymbol(symbol),
-                price,
-                change: (price * changePercent) / 100,
-                changePercent,
-                volume: formatVolume(parseFloat(volume)),
-                high24h,
-                low24h,
-                lastUpdate: Date.now()
+                setMarketData(prev => ({
+                  ...prev,
+                  [symbol]: {
+                    symbol: formatSymbol(symbol),
+                    price,
+                    change: (price * changePercent) / 100,
+                    changePercent,
+                    volume: formatVolume(parseFloat(volume)),
+                    high24h,
+                    low24h,
+                    lastUpdate: Date.now(),
+                    marketType,
+                    exchange
+                  }
+                }));
               }
-            }));
+              break;
+
+            case 'forex':
+              if (data.type === 'PRICE') {
+                const symbol = data.instrument;
+                const price = parseFloat(data.bids[0].price);
+                const prevPrice = data.closeoutBid;
+                const change = price - prevPrice;
+                const changePercent = (change / prevPrice) * 100;
+
+                setMarketData(prev => ({
+                  ...prev,
+                  [symbol]: {
+                    symbol: formatSymbol(symbol),
+                    price,
+                    change,
+                    changePercent,
+                    volume: 'N/A',
+                    high24h: price,
+                    low24h: price,
+                    lastUpdate: Date.now(),
+                    marketType,
+                    exchange
+                  }
+                }));
+              }
+              break;
+
+            case 'stocks':
+            case 'indices':
+              if (data.type === 'trade') {
+                const symbol = data.data[0].s;
+                const price = parseFloat(data.data[0].p);
+                const prevPrice = price - parseFloat(data.data[0].c);
+                const change = price - prevPrice;
+                const changePercent = (change / prevPrice) * 100;
+                const volume = data.data[0].v;
+
+                setMarketData(prev => ({
+                  ...prev,
+                  [symbol]: {
+                    symbol: formatSymbol(symbol),
+                    price,
+                    change,
+                    changePercent,
+                    volume: formatVolume(parseFloat(volume)),
+                    high24h: price,
+                    low24h: price,
+                    lastUpdate: Date.now(),
+                    marketType,
+                    exchange
+                  }
+                }));
+              }
+              break;
           }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);
@@ -123,8 +206,59 @@ export const useRealMarketData = (symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SO
   const fetchInitialData = async () => {
     try {
       setLoading(true);
+      
+      const getApiEndpoint = () => {
+        switch (marketType) {
+          case 'crypto':
+            return `https://api.binance.com/api/v3/ticker/24hr`;
+          case 'forex':
+            return `https://api.oanda.com/v3/instruments`;
+          case 'stocks':
+            return `https://finnhub.io/api/v1/quote`;
+          case 'indices':
+            return `https://finnhub.io/api/v1/quote`;
+          default:
+            return `https://api.binance.com/api/v3/ticker/24hr`;
+        }
+      };
+
+      const getHeaders = () => {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+
+        switch (marketType) {
+          case 'forex':
+            headers['Authorization'] = `Bearer ${import.meta.env.VITE_OANDA_API_KEY}`;
+            break;
+          case 'stocks':
+          case 'indices':
+            headers['X-Finnhub-Token'] = import.meta.env.VITE_FINNHUB_API_KEY;
+            break;
+        }
+
+        return headers;
+      };
+
       const promises = symbols.map(async (symbol) => {
-        const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+        const endpoint = getApiEndpoint();
+        const headers = getHeaders();
+        
+        let url = endpoint;
+        switch (marketType) {
+          case 'crypto':
+            url = `${endpoint}?symbol=${symbol}`;
+            break;
+          case 'forex':
+            url = `${endpoint}/${symbol}/candles/latest`;
+            break;
+          case 'stocks':
+          case 'indices':
+            url = `${endpoint}?symbol=${symbol}`;
+            break;
+        }
+
+        const response = await fetch(url, { headers });
         if (!response.ok) throw new Error(`Failed to fetch ${symbol}`);
         return response.json();
       });
@@ -144,7 +278,9 @@ export const useRealMarketData = (symbols: string[] = ['BTCUSDT', 'ETHUSDT', 'SO
           volume: formatVolume(parseFloat(data.volume)),
           high24h: parseFloat(data.highPrice),
           low24h: parseFloat(data.lowPrice),
-          lastUpdate: Date.now()
+          lastUpdate: Date.now(),
+          marketType,
+          exchange
         };
       });
 
