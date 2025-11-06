@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,9 @@ import { User } from '@supabase/supabase-js';
 import ModernLoginScreen from '@/components/ModernLoginScreen';
 import ModernTradingInterface from '@/components/ModernTradingInterface';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
+import AdvancedErrorBoundary from '@/components/ui/AdvancedErrorBoundary';
+import AdvancedLoadingSpinner from '@/components/ui/AdvancedLoadingSpinner';
+import Advanced3DBackground from '@/components/effects/Advanced3DBackground';
 import { toast } from 'sonner';
 
 const queryClient = new QueryClient();
@@ -114,42 +117,53 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
+        <Suspense fallback={null}>
+          <Advanced3DBackground />
+        </Suspense>
+        <div className="text-center z-10">
+          <div className="mb-8">
+            <AdvancedLoadingSpinner size="xl" variant="default" />
           </div>
-          <p className="text-white text-lg font-medium">Loading OMNI Terminal...</p>
+          <p className="text-white text-lg font-medium mb-2">Loading OMNI Terminal...</p>
+          <p className="text-slate-400 text-sm">Initializing advanced trading systems</p>
         </div>
       </div>
     );
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="omni-ui-theme">
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <div className="min-h-screen">
-              {!user ? (
-                <ModernLoginScreen 
-                  onLogin={handleLogin}
-                  isLoading={loginLoading}
-                  error={loginError}
-                />
-              ) : (
-                <ModernTradingInterface 
-                  user={user}
-                  onLogout={handleLogout}
-                />
-              )}
-            </div>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </ThemeProvider>
+    <AdvancedErrorBoundary>
+      <ThemeProvider defaultTheme="dark" storageKey="omni-ui-theme">
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <div className="min-h-screen relative overflow-hidden">
+                <Suspense fallback={null}>
+                  <Advanced3DBackground />
+                </Suspense>
+                <div className="relative z-10">
+                  {!user ? (
+                    <ModernLoginScreen 
+                      onLogin={handleLogin}
+                      isLoading={loginLoading}
+                      error={loginError}
+                    />
+                  ) : (
+                    <ModernTradingInterface 
+                      user={user}
+                      onLogout={handleLogout}
+                    />
+                  )}
+                </div>
+              </div>
+            </TooltipProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </ThemeProvider>
+    </AdvancedErrorBoundary>
   );
 };
 

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 12000,
     strictPort: true,
     cors: true,
-    allowedHosts: ['work-1-rqvcdrdpwroeaxzd.prod-runtime.all-hands.dev', 'localhost'],
+    allowedHosts: ['work-1-igmiedppihmzdgjz.prod-runtime.all-hands.dev', 'work-2-igmiedppihmzdgjz.prod-runtime.all-hands.dev', 'localhost'],
     headers: {
       'X-Frame-Options': 'ALLOWALL',
     },
@@ -74,7 +74,7 @@ export default defineConfig(({ mode }) => ({
         safari10: true,
       },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 2000,
     reportCompressedSize: false,
   },
   optimizeDeps: {
