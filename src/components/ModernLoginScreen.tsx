@@ -25,11 +25,12 @@ import { cn } from '@/lib/utils';
 
 interface ModernLoginScreenProps {
   onLogin: (email: string, password: string) => void;
+  onSignUp?: (email: string, password: string) => void;
   isLoading?: boolean;
   error?: string;
 }
 
-const ModernLoginScreen: React.FC<ModernLoginScreenProps> = ({ onLogin, isLoading, error }) => {
+const ModernLoginScreen: React.FC<ModernLoginScreenProps> = ({ onLogin, onSignUp, isLoading, error }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -308,22 +309,34 @@ const ModernLoginScreen: React.FC<ModernLoginScreenProps> = ({ onLogin, isLoadin
                 </Button>
               </form>
 
-              {/* Demo Access */}
-              <div className="text-center">
+              {/* Sign Up and Demo Access */}
+              <div className="text-center space-y-4">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/20" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-black/40 text-gray-400">Or try demo</span>
+                    <span className="px-2 bg-black/40 text-gray-400">Or</span>
                   </div>
                 </div>
+
+                {onSignUp && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onSignUp(email, password)}
+                    className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Sign Up
+                  </Button>
+                )}
 
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onLogin('demo@omni.com', 'demo123')}
-                  className="w-full mt-4 border-white/20 text-white hover:bg-white/10"
+                  className="w-full border-white/20 text-white hover:bg-white/10"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
                   Demo Access
