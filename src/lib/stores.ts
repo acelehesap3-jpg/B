@@ -2,13 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface TradingState {
-  mode: 'demo' | 'real';
   connectedExchanges: Set<string>;
   activeOrders: any[];
   positions: any[];
   balances: Record<string, Record<string, number>>;
   
-  setMode: (mode: 'demo' | 'real') => void;
   addConnectedExchange: (exchange: string) => void;
   removeConnectedExchange: (exchange: string) => void;
   updateBalances: (balances: Record<string, Record<string, number>>) => void;
@@ -20,13 +18,10 @@ interface TradingState {
 export const useTradingStore = create<TradingState>()(
   persist(
     (set) => ({
-      mode: 'demo',
       connectedExchanges: new Set(),
       activeOrders: [],
       positions: [],
       balances: {},
-
-      setMode: (mode) => set({ mode }),
       
       addConnectedExchange: (exchange) =>
         set((state) => ({
@@ -57,7 +52,6 @@ export const useTradingStore = create<TradingState>()(
     {
       name: 'omni-trading-store',
       partialize: (state) => ({
-        mode: state.mode,
         connectedExchanges: Array.from(state.connectedExchanges),
       }),
     }

@@ -4,7 +4,7 @@ import { WalletButton } from '@/components/web3/WalletButton';
 import { MarketSelector } from '@/components/trading/MarketSelector';
 import { OrderPanel } from '@/components/trading/OrderPanel';
 import { RealOrderPanel } from '@/components/trading/RealOrderPanel';
-import { TradingModeSettings } from '@/components/trading/TradingModeSettings';
+
 import { AdvancedOrderTypes } from '@/components/trading/AdvancedOrderTypes';
 import { PriceAlerts } from '@/components/trading/PriceAlerts';
 import { RiskCalculator } from '@/components/trading/RiskCalculator';
@@ -43,8 +43,6 @@ export const RightSidebar = memo(({
   assetType,
   onSelectSymbol,
 }: RightSidebarProps) => {
-  const { mode } = useTradingStore();
-
   return (
     <aside className="glass-panel space-y-4 rounded-2xl p-5 shadow-2xl transition-all duration-300 hover:shadow-primary/10 animate-slide-in-right">
       <BuyOmni99 />
@@ -62,20 +60,7 @@ export const RightSidebar = memo(({
             selectedSymbol={symbol}
           />
           
-          {mode === 'real' ? (
-            <RealOrderPanel 
-              symbol={symbol} 
-              currentPrice={currentPrice || 0}
-              exchange={exchange}
-            />
-          ) : (
-            <OrderPanel 
-              symbol={symbol} 
-              currentPrice={currentPrice} 
-              assetType={assetType}
-              exchange={exchange}
-            />
-          )}
+                    <RealOrderPanel exchange={exchange} symbol={symbol} />
           
           <AdvancedOrderTypes />
           
@@ -93,9 +78,7 @@ export const RightSidebar = memo(({
           <MarketSummary exchange={exchange} symbol={symbol} />
         </TabsContent>
         
-        <TabsContent value="settings" className="space-y-4 mt-4">
-          <TradingModeSettings />
-        </TabsContent>
+
       </Tabs>
       
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>

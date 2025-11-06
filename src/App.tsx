@@ -49,25 +49,13 @@ const App = () => {
     setLoginError('');
 
     try {
-      // Demo login
-      if (email === 'demo@omni.com' && password === 'demo123') {
-        // Create a mock user for demo
-        const mockUser = {
-          id: 'demo-user',
-          email: 'demo@omni.com',
-          user_metadata: { name: 'Demo User' },
-          app_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          role: 'authenticated'
-        } as User;
-        
-        setUser(mockUser);
-        toast.success('Welcome to OMNI Terminal Demo!');
-        setLoginLoading(false);
-        return;
-      }
+            // Gerçek giriş işlemi
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
 
       // Real Supabase login
       const { data, error } = await supabase.auth.signInWithPassword({

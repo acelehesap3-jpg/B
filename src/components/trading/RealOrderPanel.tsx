@@ -26,7 +26,7 @@ interface RealOrderPanelProps {
 
 export const RealOrderPanel = ({ exchange, symbol, currentPrice }: RealOrderPanelProps) => {
   const { executeOrder, isExecuting, getBalance } = useRealOrderExecution();
-  const { mode } = useTradingStore();
+
   const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop'>('market');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState<string>('');
