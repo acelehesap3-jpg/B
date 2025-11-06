@@ -46,6 +46,8 @@
     "@tanstack/react-table": "^8.11.2",
     "@web3-react/core": "^8.2.3",
     "@web3-react/injected-connector": "^6.0.7",
+    "axios": "^1.13.2",
+    "binance-api-node": "^0.13.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
@@ -71,7 +73,7 @@
     "sonner": "^1.0.3",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.4",
+    "zod": "^3.25.76",
     "zustand": "^4.4.1"
   },
   "devDependencies": {
