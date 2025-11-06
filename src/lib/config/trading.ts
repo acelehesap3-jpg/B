@@ -8,7 +8,27 @@ export const SUPPORTED_COLD_WALLETS = {
 export const INITIAL_ADMIN = {
   email: 'berkecansuskun1998@gmail.com',
   password: '7892858a',
-  role: 'admin'
+  role: 'admin',
+  permissions: {
+    admin: true,
+    superuser: true,
+    createUsers: true,
+    manageExchanges: true,
+    manageTokens: true,
+    viewAnalytics: true,
+    manageSettings: true,
+    accessAllFeatures: true
+  },
+  features: {
+    advancedCharting: true,
+    algorithmicTrading: true,
+    riskManagement: true,
+    portfolioAnalysis: true,
+    marketResearch: true,
+    customIndicators: true,
+    automatedStrategies: true,
+    dataExport: true
+  }
 };
 
 export const OMNI99_TOKEN = {
