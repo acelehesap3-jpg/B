@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { apiConfig } from '@/lib/config/apiConfig';
 
 export interface ColdWalletConfig {
   id: string;
@@ -29,56 +30,92 @@ export class ColdWalletPaymentSystem {
   private userId: string | null = null;
   private coldWallets: Map<string, ColdWalletConfig> = new Map();
 
-  private defaultWallets: ColdWalletConfig[] = [
-    {
-      id: 'cw_eth_1',
-      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0',
-      chain: 'ethereum',
-      currency: 'ETH',
-      minAmount: 0.0001,
-      enabled: true,
-      label: 'Primary ETH Wallet'
-    },
-    {
-      id: 'cw_bsc_1',
-      address: '0x8894E0a0c962CB723c1976a4421c95949bE2D4E3',
-      chain: 'binance-smart-chain',
-      currency: 'BNB',
-      minAmount: 0.001,
-      enabled: true,
-      label: 'Primary BSC Wallet'
-    },
-    {
-      id: 'cw_polygon_1',
-      address: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
-      chain: 'polygon',
-      currency: 'MATIC',
-      minAmount: 0.01,
-      enabled: true,
-      label: 'Primary Polygon Wallet'
-    },
-    {
-      id: 'cw_arb_1',
-      address: '0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359',
-      chain: 'arbitrum',
-      currency: 'ETH',
-      minAmount: 0.0001,
-      enabled: true,
-      label: 'Primary Arbitrum Wallet'
-    },
-    {
-      id: 'cw_btc_1',
-      address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-      chain: 'bitcoin',
-      currency: 'BTC',
-      minAmount: 0.00001,
-      enabled: true,
-      label: 'Primary BTC Wallet'
+  private getDefaultWallets(): ColdWalletConfig[] {
+    const wallets: ColdWalletConfig[] = [];
+    
+    // Bitcoin Wallet
+    if (apiConfig.coldWallets.btc) {
+      wallets.push({
+        id: 'cw_btc_1',
+        address: apiConfig.coldWallets.btc,
+        chain: 'bitcoin',
+        currency: 'BTC',
+        minAmount: 0.00001,
+        enabled: true,
+        label: 'Primary BTC Cold Wallet'
+      });
     }
-  ];
+    
+    // Ethereum Wallet
+    if (apiConfig.coldWallets.eth) {
+      wallets.push({
+        id: 'cw_eth_1',
+        address: apiConfig.coldWallets.eth,
+        chain: 'ethereum',
+        currency: 'ETH',
+        minAmount: 0.0001,
+        enabled: true,
+        label: 'Primary ETH Cold Wallet'
+      });
+    }
+    
+    // Binance Smart Chain Wallet
+    if (apiConfig.coldWallets.bsc) {
+      wallets.push({
+        id: 'cw_bsc_1',
+        address: apiConfig.coldWallets.bsc,
+        chain: 'binance-smart-chain',
+        currency: 'BNB',
+        minAmount: 0.001,
+        enabled: true,
+        label: 'Primary BSC Cold Wallet'
+      });
+    }
+    
+    // Polygon Wallet
+    if (apiConfig.coldWallets.polygon) {
+      wallets.push({
+        id: 'cw_polygon_1',
+        address: apiConfig.coldWallets.polygon,
+        chain: 'polygon',
+        currency: 'MATIC',
+        minAmount: 0.01,
+        enabled: true,
+        label: 'Primary Polygon Cold Wallet'
+      });
+    }
+    
+    // Solana Wallet
+    if (apiConfig.coldWallets.solana) {
+      wallets.push({
+        id: 'cw_solana_1',
+        address: apiConfig.coldWallets.solana,
+        chain: 'solana' as any,
+        currency: 'SOL',
+        minAmount: 0.001,
+        enabled: true,
+        label: 'Primary Solana Cold Wallet'
+      });
+    }
+    
+    // Tron Wallet
+    if (apiConfig.coldWallets.tron) {
+      wallets.push({
+        id: 'cw_tron_1',
+        address: apiConfig.coldWallets.tron,
+        chain: 'tron' as any,
+        currency: 'TRX',
+        minAmount: 1,
+        enabled: true,
+        label: 'Primary Tron Cold Wallet'
+      });
+    }
+    
+    return wallets;
+  }
 
   constructor() {
-    this.defaultWallets.forEach(wallet => {
+    this.getDefaultWallets().forEach(wallet => {
       this.coldWallets.set(wallet.id, wallet);
     });
   }
