@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Exchange, DataSource, Candle, Trade, Timeframe } from '@/types/trading';
 import { EXCHANGES } from '@/lib/exchanges';
+import { binance } from '@/lib/exchanges/binance';
+import { stocksDataProvider } from '@/lib/stocksApi';
+import { forexDataProvider } from '@/lib/forexApi';
 import { toast } from 'sonner';
 
 const timeframeToLimit: Record<Timeframe, number> = {
@@ -40,58 +43,89 @@ export function useTradingData(
   const fetchCandles = useCallback(async () => {
     try {
       setLoading(true);
-      const config = EXCHANGES[exchange];
-      const limit = timeframeToLimit[timeframe];
-      const interval = timeframeToInterval[timeframe];
-      
-      let url = config.restKlines(symbol, limit);
-      if (exchange === 'BINANCE') {
-        url = url.replace(/interval=[^&]*/, `interval=${interval}`);
-      }
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
-      const data = await response.json();
-      
       let processedCandles: Candle[] = [];
-      
-      if (exchange === 'BINANCE') {
-        processedCandles = data.map((d: any[]) => ({
-          x: d[0],
-          y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
+
+      // Determine asset type and use appropriate API
+      if (exchange === 'BINANCE' && binance.isConfigured()) {
+        // Use real Binance API
+        const interval = timeframeToInterval[timeframe];
+        const limit = timeframeToLimit[timeframe];
+        processedCandles = await binance.fetchKlines(symbol, interval, limit);
+        
+        // Get current price
+        const ticker = await binance.fetchTicker(symbol);
+        setLastPrice(ticker.price);
+        
+      } else if (exchange === 'STOCKS' && stocksDataProvider.isConfigured()) {
+        // Use real stocks API
+        processedCandles = await stocksDataProvider.getCandles(symbol, timeframe);
+        
+        // Get current price
+        const quote = await stocksDataProvider.getQuote(symbol);
+        setLastPrice(quote.price);
+        
+      } else if (exchange === 'FOREX' && forexDataProvider.isConfigured()) {
+        // Use real forex API
+        processedCandles = await forexDataProvider.getCandles(symbol, timeframe);
+        
+        // Get current price
+        const quote = await forexDataProvider.getQuote(symbol);
+        setLastPrice((quote.bid + quote.ask) / 2);
+        
+      } else {
+        // Fallback to demo data
+        const config = EXCHANGES[exchange];
+        const limit = timeframeToLimit[timeframe];
+        const interval = timeframeToInterval[timeframe];
+        
+        let url = config.restKlines(symbol, limit);
+        if (exchange === 'BINANCE') {
+          url = url.replace(/interval=[^&]*/, `interval=${interval}`);
+        }
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        
+        if (exchange === 'BINANCE') {
+          processedCandles = data.map((d: any[]) => ({
+            x: d[0],
+            y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
+          }));
+        } else if (exchange === 'OKX') {
+          const arr = data.data || data;
+          processedCandles = (arr || []).map((d: any[]) => ({
+            x: parseInt(d[0]),
+            y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
+          }));
+        } else if (exchange === 'KUCOIN') {
+          const arr = data.data || data;
+          processedCandles = (arr || []).map((d: any[]) => ({
+            x: d[0] > 1e12 ? d[0] : d[0] * 1000,
+            y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
+          }));
+        } else if (exchange === 'COINBASE') {
+          processedCandles = data.map((d: any[]) => ({
+            x: d[0] * 1000,
+            y: [parseFloat(d[3]), parseFloat(d[2]), parseFloat(d[1]), parseFloat(d[4])],
+          }));
+        }
+        
+        // Normalize timestamps
+        processedCandles = processedCandles.map(c => ({
+          x: c.x > 1e12 ? c.x : c.x * 1000,
+          y: c.y.map(v => parseFloat(v.toString())) as [number, number, number, number],
         }));
-      } else if (exchange === 'OKX') {
-        const arr = data.data || data;
-        processedCandles = (arr || []).map((d: any[]) => ({
-          x: parseInt(d[0]),
-          y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
-        }));
-      } else if (exchange === 'KUCOIN') {
-        const arr = data.data || data;
-        processedCandles = (arr || []).map((d: any[]) => ({
-          x: d[0] > 1e12 ? d[0] : d[0] * 1000,
-          y: [parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3]), parseFloat(d[4])],
-        }));
-      } else if (exchange === 'COINBASE') {
-        processedCandles = data.map((d: any[]) => ({
-          x: d[0] * 1000,
-          y: [parseFloat(d[3]), parseFloat(d[2]), parseFloat(d[1]), parseFloat(d[4])],
-        }));
+        
+        if (processedCandles.length > 0) {
+          setLastPrice(processedCandles[processedCandles.length - 1].y[3]);
+        }
       }
-      
-      // Normalize timestamps
-      processedCandles = processedCandles.map(c => ({
-        x: c.x > 1e12 ? c.x : c.x * 1000,
-        y: c.y.map(v => parseFloat(v.toString())) as [number, number, number, number],
-      }));
       
       setCandles(processedCandles);
-      if (processedCandles.length > 0) {
-        setLastPrice(processedCandles[processedCandles.length - 1].y[3]);
-      }
+      toast.success(`Loaded ${processedCandles.length} candles from real API`);
       
-      toast.success(`Loaded ${processedCandles.length} candles`);
     } catch (error) {
       console.error('Failed to fetch candles:', error);
       toast.error('Failed to load chart data');
