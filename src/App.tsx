@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import ModernLoginScreen from '@/components/ModernLoginScreen';
 import ModernTradingInterface from '@/components/ModernTradingInterface';
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { toast } from 'sonner';
 
 const queryClient = new QueryClient();
@@ -125,28 +126,30 @@ const App = () => {
   }
 
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <div className="min-h-screen">
-            {!user ? (
-              <ModernLoginScreen 
-                onLogin={handleLogin}
-                isLoading={loginLoading}
-                error={loginError}
-              />
-            ) : (
-              <ModernTradingInterface 
-                user={user}
-                onLogout={handleLogout}
-              />
-            )}
-          </div>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="omni-ui-theme">
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <div className="min-h-screen">
+              {!user ? (
+                <ModernLoginScreen 
+                  onLogin={handleLogin}
+                  isLoading={loginLoading}
+                  error={loginError}
+                />
+              ) : (
+                <ModernTradingInterface 
+                  user={user}
+                  onLogout={handleLogout}
+                />
+              )}
+            </div>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ThemeProvider>
   );
 };
 

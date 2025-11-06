@@ -24,9 +24,20 @@ import {
   ChevronRight,
   Star,
   Eye,
-  EyeOff
+  EyeOff,
+  Bot,
+  AlertTriangle,
+  Gem,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRealBalance } from '@/hooks/useRealBalance';
+import ExchangeSpecificTools from './trading/ExchangeSpecificTools';
+import TradingAIAssistant from './ai/TradingAIAssistant';
+import AdvancedRiskManagement from './risk/AdvancedRiskManagement';
+import NotificationSystem from './notifications/NotificationSystem';
+import { ThemeToggle } from './ui/ThemeToggle';
+import { useRealMarketData } from '@/hooks/useRealMarketData';
 
 interface ModernTradingInterfaceProps {
   user: any;
@@ -37,23 +48,23 @@ const ModernTradingInterface: React.FC<ModernTradingInterfaceProps> = ({ user, o
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifications, setNotifications] = useState(3);
-  const [balance, setBalance] = useState({ demo: 99320.98, omni99: 0.00 });
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+
+  // Real data hooks
+  const { balance, loading: balanceLoading, error: balanceError } = useRealBalance(user?.id);
+  const { marketData, loading: marketLoading, error: marketError, isConnected } = useRealMarketData();
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'from-blue-500 to-cyan-500' },
     { id: 'trading', label: 'Trading', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
     { id: 'portfolio', label: 'Portfolio', icon: Wallet, color: 'from-purple-500 to-pink-500' },
+    { id: 'exchange-tools', label: 'Exchange Tools', icon: Gem, color: 'from-emerald-500 to-teal-500' },
+    { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, color: 'from-violet-500 to-purple-500' },
+    { id: 'risk-management', label: 'Risk Management', icon: AlertTriangle, color: 'from-red-500 to-orange-500' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, color: 'from-yellow-500 to-amber-500' },
     { id: 'omni99', label: 'OMNI99', icon: Coins, color: 'from-orange-500 to-red-500' },
     { id: 'admin', label: 'Admin', icon: Shield, color: 'from-indigo-500 to-purple-500' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'from-gray-500 to-slate-500' }
-  ];
-
-  const marketData = [
-    { symbol: 'BTC/USDT', price: 67902.36, change: 2.45, volume: '1.2B' },
-    { symbol: 'ETH/USDT', price: 3379.01, change: -1.23, volume: '890M' },
-    { symbol: 'SOL/USDT', price: 158.15, change: 5.67, volume: '456M' },
-    { symbol: 'ADA/USDT', price: 0.534, change: -0.89, volume: '234M' }
   ];
 
   return (
@@ -124,12 +135,28 @@ const ModernTradingInterface: React.FC<ModernTradingInterfaceProps> = ({ user, o
                   <div>
                     <p className="text-xs text-gray-400">Total Balance</p>
                     <p className="text-sm font-bold text-white">
-                      {isBalanceVisible ? `$${balance.demo.toLocaleString()}` : '••••••'}
+                      {balanceLoading ? (
+                        <span className="animate-pulse">Loading...</span>
+                      ) : balanceError ? (
+                        <span className="text-red-400">Error</span>
+                      ) : isBalanceVisible ? (
+                        `$${balance.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      ) : (
+                        '••••••'
+                      )}
                     </p>
+                    {!balanceLoading && !balanceError && (
+                      <p className="text-xs text-purple-400">
+                        {balance.omni99.toLocaleString()} OMNI99
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* Notifications */}
             <Button variant="ghost" size="sm" className="relative text-white hover:bg-white/10">
@@ -198,39 +225,78 @@ const ModernTradingInterface: React.FC<ModernTradingInterfaceProps> = ({ user, o
 
                 {/* Quick Stats */}
                 <div className="mt-8 space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                    Quick Stats
-                  </h3>
-                  {marketData.map((item, index) => (
-                    <motion.div
-                      key={item.symbol}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-white">{item.symbol}</p>
-                        <p className="text-xs text-gray-400">{item.volume}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-white">
-                          ${item.price.toLocaleString()}
-                        </p>
-                        <div className={cn(
-                          "flex items-center text-xs",
-                          item.change > 0 ? "text-green-400" : "text-red-400"
-                        )}>
-                          {item.change > 0 ? (
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3 mr-1" />
-                          )}
-                          {Math.abs(item.change)}%
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                      Live Market Data
+                    </h3>
+                    <div className={cn(
+                      "flex items-center text-xs",
+                      isConnected ? "text-green-400" : "text-red-400"
+                    )}>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full mr-1",
+                        isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"
+                      )} />
+                      {isConnected ? "Live" : "Disconnected"}
+                    </div>
+                  </div>
+                  {marketLoading ? (
+                    <div className="space-y-3">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="animate-pulse p-3 bg-white/5 rounded-lg border border-white/10">
+                          <div className="flex justify-between">
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-600 rounded w-20"></div>
+                              <div className="h-3 bg-gray-700 rounded w-12"></div>
+                            </div>
+                            <div className="space-y-2 text-right">
+                              <div className="h-4 bg-gray-600 rounded w-16"></div>
+                              <div className="h-3 bg-gray-700 rounded w-10"></div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      ))}
+                    </div>
+                  ) : marketError ? (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                      <p className="text-red-400 text-sm">Failed to load market data</p>
+                      <p className="text-red-300 text-xs mt-1">{marketError}</p>
+                    </div>
+                  ) : (
+                    marketData.map((item, index) => (
+                      <motion.div
+                        key={item.symbol}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-white">{item.symbol}</p>
+                          <p className="text-xs text-gray-400">{item.volume}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-white">
+                            ${item.price.toLocaleString(undefined, { 
+                              minimumFractionDigits: item.price < 1 ? 4 : 2,
+                              maximumFractionDigits: item.price < 1 ? 4 : 2
+                            })}
+                          </p>
+                          <div className={cn(
+                            "flex items-center text-xs",
+                            item.changePercent > 0 ? "text-green-400" : "text-red-400"
+                          )}>
+                            {item.changePercent > 0 ? (
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3 mr-1" />
+                            )}
+                            {Math.abs(item.changePercent).toFixed(2)}%
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               </div>
             </motion.aside>
@@ -251,6 +317,10 @@ const ModernTradingInterface: React.FC<ModernTradingInterfaceProps> = ({ user, o
               {activeTab === 'dashboard' && <DashboardContent />}
               {activeTab === 'trading' && <TradingContent user={user} />}
               {activeTab === 'portfolio' && <PortfolioContent />}
+              {activeTab === 'exchange-tools' && <ExchangeToolsContent />}
+              {activeTab === 'ai-assistant' && <AIAssistantContent />}
+              {activeTab === 'risk-management' && <RiskManagementContent />}
+              {activeTab === 'notifications' && <NotificationsContent />}
               {activeTab === 'omni99' && <OMNI99Content user={user} />}
               {activeTab === 'admin' && <AdminContent user={user} />}
               {activeTab === 'settings' && <SettingsContent />}
@@ -393,6 +463,75 @@ const AdminContent = ({ user }: { user: any }) => {
 
   return <AdvancedAdminPanel user={user} />;
 };
+
+// Exchange Tools Content Component
+const ExchangeToolsContent = () => {
+  const [selectedExchange, setSelectedExchange] = useState('binance');
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-white">Exchange Specific Tools</h2>
+        <div className="flex gap-2">
+          {['binance', 'bybit', 'okx', 'kucoin', 'kraken'].map((exchange) => (
+            <Button
+              key={exchange}
+              variant={selectedExchange === exchange ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedExchange(exchange)}
+              className="capitalize"
+            >
+              {exchange}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <ExchangeSpecificTools exchange={selectedExchange} />
+    </div>
+  );
+};
+
+// AI Assistant Content Component
+const AIAssistantContent = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-3xl font-bold text-white">AI Trading Assistant</h2>
+      <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+        <Bot className="h-3 w-3 mr-1" />
+        AI Powered
+      </Badge>
+    </div>
+    <TradingAIAssistant />
+  </div>
+);
+
+// Risk Management Content Component
+const RiskManagementContent = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-3xl font-bold text-white">Risk Management</h2>
+      <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        Risk Control
+      </Badge>
+    </div>
+    <AdvancedRiskManagement />
+  </div>
+);
+
+// Notifications Content Component
+const NotificationsContent = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-3xl font-bold text-white">Notifications</h2>
+      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+        <Bell className="h-3 w-3 mr-1" />
+        Alert System
+      </Badge>
+    </div>
+    <NotificationSystem />
+  </div>
+);
 
 // Settings Content Component
 const SettingsContent = () => (

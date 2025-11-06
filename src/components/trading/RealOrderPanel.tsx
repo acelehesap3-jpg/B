@@ -46,11 +46,6 @@ export const RealOrderPanel = ({ exchange, symbol, currentPrice }: RealOrderPane
   };
 
   const handleExecuteOrder = async () => {
-    if (mode === 'demo') {
-      toast.error('Switch to Real mode to execute real orders');
-      return;
-    }
-
     const actualAmount = calculateAmount();
     
     if (isNaN(actualAmount) || actualAmount <= 0) {
@@ -71,25 +66,17 @@ export const RealOrderPanel = ({ exchange, symbol, currentPrice }: RealOrderPane
       return;
     }
 
-    await executeOrder(exchange, symbol, side, orderType, actualAmount, orderPrice);
-    
-    setAmount('');
-    setPercentage('25');
+    try {
+      await executeOrder(exchange, symbol, side, orderType, actualAmount, orderPrice);
+      toast.success(`${side.toUpperCase()} order executed successfully`);
+      setAmount('');
+      setPercentage('25');
+    } catch (error) {
+      toast.error(`Order execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
-  if (mode === 'demo') {
-    return (
-      <Card className="p-4 border-warning/50 bg-warning/5">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertCircle className="w-5 h-5 text-warning" />
-          <h3 className="font-bold">Demo Mode Active</h3>
-        </div>
-        <p className="text-sm text-muted-foreground mb-3">
-          Switch to Real mode in settings to execute real trades with actual funds.
-        </p>
-      </Card>
-    );
-  }
+  // Real trading mode - no demo restrictions
 
   return (
     <Card className="p-4 bg-gradient-to-br from-background to-primary/5 border-primary/20">
